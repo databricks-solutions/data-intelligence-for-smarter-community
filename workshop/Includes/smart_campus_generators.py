@@ -263,7 +263,7 @@ def _load_residences(geojson_path: Path) -> List[Dict]:
 def generate_telemetry(spark, catalog: str, schema: str, scale: float = 0.15,
                        seed: int = 42, geojson_dir: str = None) -> Dict[str, int]:
     """
-    Generate the 10 synthetic *telemetry* Bronze tables for the smart-community testbed.
+    Generate the 9 synthetic *telemetry* Bronze tables for the smart-community testbed.
 
     The two dimension tables (dim_buildings, dim_zones) are intentionally NOT
     produced here — students build those from the real UBC open geodata in Lab 02.
@@ -316,31 +316,31 @@ def generate_telemetry(spark, catalog: str, schema: str, scale: float = 0.15,
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog}.{schema}")
 
     # Generate event tables (scaled). Dimensions come from the geodata in Lab 02.
-    print("\n[1/10] Generating sc_access_events...")
+    print("\n[1/9] Generating sc_access_events...")
     sc_access_df = _gen_sc_access_events(all_buildings, rng, scale)
 
-    print("\n[3/11] Generating sc_device_health...")
+    print("\n[2/9] Generating sc_device_health...")
     sc_device_df = _gen_sc_device_health(all_buildings, rng, scale)
 
-    print("\n[4/11] Generating mobility_presence...")
+    print("\n[3/9] Generating mobility_presence...")
     mobility_df = _gen_mobility_presence(all_buildings, rng, scale)
 
-    print("\n[5/11] Generating wireless_cells...")
+    print("\n[4/9] Generating wireless_cells...")
     wireless_cells_df = _gen_wireless_cells(rng)
 
-    print("\n[6/11] Generating wireless_connectivity...")
+    print("\n[5/9] Generating wireless_connectivity...")
     wireless_conn_df = _gen_wireless_connectivity(all_buildings, wireless_cells_df, rng, scale)
 
-    print("\n[7/11] Generating wireless_node_health...")
+    print("\n[6/9] Generating wireless_node_health...")
     wireless_health_df = _gen_wireless_node_health(wireless_cells_df, rng)
 
-    print("\n[8/11] Generating connectivity_presence...")
+    print("\n[7/9] Generating connectivity_presence...")
     connectivity_df = _gen_connectivity_presence(all_buildings, rng, scale)
 
-    print("\n[9/11] Generating sc_gateway_network...")
+    print("\n[8/9] Generating sc_gateway_network...")
     gateway_df = _gen_sc_gateway_network(all_buildings, rng, scale)
 
-    print("\n[10/11] Generating udl_campus_metrics...")
+    print("\n[9/9] Generating udl_campus_metrics...")
     udl_df = _gen_udl_campus_metrics(all_buildings, rng, scale)
 
     # Write all to UC
