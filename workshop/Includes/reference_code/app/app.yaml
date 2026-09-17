@@ -1,0 +1,27 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+# Lab 06 rewrites these values to point at YOUR catalog, Silver schema, SQL
+# warehouse, and Genie space before deploying — you don't edit them by hand.
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: ""          # set by Lab 06
+  - name: CATALOG
+    value: ""          # your labuser_<username> catalog — set by Lab 06
+  - name: SCHEMA
+    value: "silver"
+  - name: GENIE_SPACE_ID
+    value: ""          # your Genie space id — set by Lab 06
+
+resources:
+  - name: sql-warehouse
+    sql_warehouse:
+      id: ""           # set by Lab 06
+      permission: CAN_USE
