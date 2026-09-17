@@ -13,17 +13,31 @@
 # MAGIC Adapted from the Databricks Academy enablement-lab pattern. Isolation is per-user:
 # MAGIC each student gets a `labuser_<username>` catalog with `bronze` / `silver` / `gold`
 # MAGIC schemas. The app deployed in Lab 6 reads the **silver** schema.
+# MAGIC
+# MAGIC **No permission to create a catalog?** Set `EXISTING_CATALOG` in the config cell
+# MAGIC below to a catalog you can already use. The workshop will use that catalog and
+# MAGIC namespace its schemas per user (`<user>_bronze` / `_silver` / `_gold`) so several
+# MAGIC people can safely share one catalog.
 
 # COMMAND ----------
 
 # DBTITLE 1,Workshop configuration
 # Course-wide config. Change here, not in the lab notebooks.
 CATALOG_PREFIX = "labuser"                 # per-user catalog is <prefix>_<username>
-BRONZE_SCHEMA = "bronze"                     # medallion schema names (parameterized so
-SILVER_SCHEMA = "silver"                     # a shared-workspace validation run can point
-GOLD_SCHEMA = "gold"                         # them elsewhere without editing every notebook)
-SCHEMAS = [BRONZE_SCHEMA, SILVER_SCHEMA, GOLD_SCHEMA]
-APP_SCHEMA = SILVER_SCHEMA                    # schema the Lab 6 app points at
+
+# ── No permission to CREATE a catalog? ────────────────────────────────────────
+# Set EXISTING_CATALOG to a catalog you can already use (e.g. "main" or
+# "cmegdemos_catalog"). The workshop then uses that catalog instead of creating
+# one, and namespaces its schemas per user (<user>_bronze / _silver / _gold /
+# _workshop_config) so several people can safely share the same catalog.
+# Leave blank ("") to auto-create a per-user catalog (the default behavior).
+EXISTING_CATALOG = ""
+
+# Base medallion schema names. In shared-catalog mode they get a per-user prefix;
+# the final names (BRONZE_SCHEMA/SILVER_SCHEMA/GOLD_SCHEMA/CONFIG_SCHEMA) are
+# resolved in the "Resolve target catalog" cell below.
+_BASE_BRONZE, _BASE_SILVER, _BASE_GOLD = "bronze", "silver", "gold"
+_BASE_CONFIG = "_workshop_config"            # tiny schema holding the Genie space id
 
 # The 11 tables the single-tab app depends on (produced across labs 01–04).
 APP_TABLES = [
@@ -139,11 +153,56 @@ def build_user_catalog(prefix: str = CATALOG_PREFIX, catalog_forced=None) -> str
                 print(f"✅ Catalog '{catalog_name}' created successfully.")
                 return catalog_name
             except Exception as e:
-                print(
-                    f"⚠️ Could not create catalog '{catalog_name}'. "
-                    "You may not have privileges to create catalogs in this workspace.\n"
-                    f"Error: {e}"
+                raise PermissionError(
+                    f"❌ Could not create catalog '{catalog_name}' — you likely lack the "
+                    "CREATE CATALOG privilege in this workspace.\n"
+                    "   Workaround: open Classroom-Setup-Common and set EXISTING_CATALOG to a "
+                    "catalog you CAN use (run SHOW CATALOGS to see your options), then re-run.\n"
+                    f"   Original error: {e}"
                 )
+
+
+# COMMAND ----------
+
+# DBTITLE 1,Resolve target catalog + (optionally per-user) schema names
+# When EXISTING_CATALOG is set, one catalog is shared across users, so schemas are
+# prefixed with the username to keep each person's data isolated. Otherwise the
+# per-user catalog already isolates data and schemas stay plain bronze/silver/gold.
+def _schema_prefix() -> str:
+    if EXISTING_CATALOG.strip():
+        return _safe_uc_name(_current_user_email().split("@")[0])[:19] + "_"
+    return ""
+
+
+_SCHEMA_PREFIX = _schema_prefix()
+BRONZE_SCHEMA = f"{_SCHEMA_PREFIX}{_BASE_BRONZE}"
+SILVER_SCHEMA = f"{_SCHEMA_PREFIX}{_BASE_SILVER}"
+GOLD_SCHEMA = f"{_SCHEMA_PREFIX}{_BASE_GOLD}"
+CONFIG_SCHEMA = f"{_SCHEMA_PREFIX}{_BASE_CONFIG}"
+SCHEMAS = [BRONZE_SCHEMA, SILVER_SCHEMA, GOLD_SCHEMA]
+APP_SCHEMA = SILVER_SCHEMA                    # schema the Lab 6 app points at
+
+
+def resolve_catalog() -> str:
+    """Resolve the catalog the workshop should use.
+
+    - If EXISTING_CATALOG is set: use it as-is (it must already exist and be usable);
+      never attempt to CREATE a catalog. Schemas are namespaced per user so a shared
+      catalog stays collision-free.
+    - Otherwise: fall back to the per-user auto-created catalog (build_user_catalog).
+    """
+    if EXISTING_CATALOG.strip():
+        cat = EXISTING_CATALOG.strip()
+        if not _catalog_exists(cat, _get_workspace_catalogs()):
+            raise ValueError(
+                f"❌ EXISTING_CATALOG '{cat}' was not found (or you cannot see it) in this "
+                "workspace.\n   Run  SHOW CATALOGS  to list what you can use, then set "
+                "EXISTING_CATALOG in Classroom-Setup-Common to one of those names."
+            )
+        print(f"✅ Using existing catalog '{cat}' (shared mode; your schemas are "
+              f"prefixed with '{_SCHEMA_PREFIX}').")
+        return cat
+    return build_user_catalog()
 
 
 # COMMAND ----------

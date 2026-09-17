@@ -61,7 +61,7 @@ print(f"Using warehouse: {chosen.name} ({WAREHOUSE_ID})")
 
 # DBTITLE 1,Read back the Genie Space ID saved in Lab 05
 try:
-    GENIE_SPACE_ID = spark.table(f"{DA_CATALOG}._workshop_config.genie").first()["genie_space_id"]
+    GENIE_SPACE_ID = spark.table(f"{DA_CONFIG}.genie").first()["genie_space_id"]
     print(f"Genie Space ID from Lab 05: {GENIE_SPACE_ID}")
 except Exception:
     GENIE_SPACE_ID = ""

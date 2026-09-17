@@ -4,7 +4,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Ensure catalog + schemas, create an empty App, install the reference app code
-catalog = build_user_catalog()
+catalog = resolve_catalog()
 create_schemas(catalog, SCHEMAS)
 spark.sql(f"USE CATALOG `{catalog}`")
 
@@ -14,6 +14,7 @@ ensure_bronze_data(catalog)
 DA_CATALOG = catalog
 DA_SILVER = f"{catalog}.{SILVER_SCHEMA}"
 DA_GOLD = f"{catalog}.{GOLD_SCHEMA}"
+DA_CONFIG = f"{catalog}.{CONFIG_SCHEMA}"     # holds the Genie space id from Lab 05
 
 # Create an empty Databricks App (compute pre-warmed) to deploy into later.
 my_app_name, my_app_sp = app_create(notebook_scope=True)

@@ -4,7 +4,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Provision this student's catalog + medallion schemas
-catalog = build_user_catalog()
+catalog = resolve_catalog()
 create_schemas(catalog, SCHEMAS)
 spark.sql(f"USE CATALOG `{catalog}`")
 

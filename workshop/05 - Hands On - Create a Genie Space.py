@@ -110,12 +110,12 @@ genie_space_id = dbutils.widgets.get("genie_space_id").strip()
 
 if genie_space_id:
     # Persist it so Lab 06 can read it back without re-typing.
-    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {DA_GOLD.rsplit('.',1)[0]}._workshop_config")
+    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {DA_CONFIG}")
     spark.createDataFrame([(genie_space_id,)], "genie_space_id string").write.mode("overwrite").saveAsTable(
-        f"{DA_CATALOG}._workshop_config.genie"
+        f"{DA_CONFIG}.genie"
     )
     print(f"✅ Saved Genie Space ID: {genie_space_id}")
-    print("   Lab 06 will read it from {catalog}._workshop_config.genie")
+    print(f"   Lab 06 will read it from {DA_CONFIG}.genie")
 else:
     print("ℹ️ Paste your Space ID into the widget above and re-run this cell.")
 

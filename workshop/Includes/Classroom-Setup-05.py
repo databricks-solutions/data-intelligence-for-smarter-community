@@ -4,7 +4,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Provision this student's catalog + medallion schemas
-catalog = build_user_catalog()
+catalog = resolve_catalog()
 create_schemas(catalog, SCHEMAS)
 spark.sql(f"USE CATALOG `{catalog}`")
 
@@ -17,6 +17,7 @@ DA_CATALOG = catalog
 DA_BRONZE = f"{catalog}.{BRONZE_SCHEMA}"
 DA_SILVER = f"{catalog}.{SILVER_SCHEMA}"
 DA_GOLD = f"{catalog}.{GOLD_SCHEMA}"
+DA_CONFIG = f"{catalog}.{CONFIG_SCHEMA}"     # holds the Genie space id for Lab 06
 
 # COMMAND ----------
 
